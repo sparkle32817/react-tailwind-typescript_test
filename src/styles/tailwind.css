@@ -22404,6 +22404,38 @@ a {
   cursor: pointer;
 }
 
+.data-table {
+  border-collapse: collapse;
+}
+
+.data-table td, .data-table th {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+.data-table tr:nth-child(even){
+  background-color: #f2f2f2;
+}
+
+.data-table tr:hover {
+  background-color: #ddd;
+}
+
+.data-table th {
+  padding-top: 12px;
+  padding-bottom: 12px;
+  text-align: left;
+  background-color: #04AA6D;
+  color: white;
+}
+
+.ReactModal__Content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
 @media (min-width: 640px) {
   .sm\:container {
     width: 100%;

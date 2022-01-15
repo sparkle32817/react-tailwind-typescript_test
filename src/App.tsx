@@ -1,39 +1,53 @@
-import { METHODS } from "http";
-import { number } from "prop-types";
 import React, { useEffect, useState } from "react";
-import { Button } from "./components";
-import Modal from "react-modal";
+import { MainModal, ConfirmModal, EditModal } from "./components/modal/index";
 import "./styles/index.css";
+import Table from "./components/table/index";
 
 const App = () => {
   const [data, setData] = useState<any>([]);
-  const [paginationData, setPaginationData] = useState<any>([]);
-  const tableHeader = [
-    "Id",
-    "Name",
-    "Address1",
-    "Address2",
-    "City",
-    "State",
-    "Zip"
+  const [modalIsOpen, setModalIsOpen] = useState<boolean>(false);
+  const [editData, setEditData] = useState<any>();
+  const [editModalIsOpen, setEditModalIsOpen] = useState<boolean>(false);
+
+  const columns = [
+    {
+      Header: 'Id',
+      accessor: 'id',
+    },
+    {
+      Header: 'Name',
+      accessor: 'name',
+    },
+    {
+      Header: 'Address1',
+      accessor: 'address1',
+    },
+    {
+      Header: 'Address2',
+      accessor: 'address2',
+    },
+    {
+      Header: 'City',
+      accessor: 'city',
+    },
+    {
+      Header: 'State',
+      accessor: 'state',
+    },
+    {
+      Header: 'Zip',
+      accessor: 'zip',
+    },
+    {
+      Header: 'Actions',
+      accessor: 'actions',
+      Cell: (props: any) => <div className="flex justify-between p-4">
+        <button className="bg-green-600 hover:bg-green-500 mr-4 p-2 outline-none text-white" onClick={(e) => handleEdit(props.row.original)}>Edit</button>
+        <button className="bg-red-600 hover:bg-red-500 p-2 outline-none text-white" onClick={(e) => handleDelete(props.row.original.id)}>Delete</button>
+      </div>
+    }
   ];
-  const [currentPage, setCurrentPage] = useState<any>(5);
-  const [currentPagination, setCurrentPagination] = useState<any>(0);
-  const [modalIsOpen, setIsOpen] = useState<any>(false);
-  const [name, setName] = useState<any>();
-  const [address1, setAddress1] = useState<any>();
-  const [address2, setAddress2] = useState<any>();
-  const [city, setCity] = useState<any>();
-  const [state, setState] = useState<any>();
-  const [zip, setZip] = useState<any>();
 
-  function openModal() {
-    setIsOpen(true);
-  }
-
-  function closeModal() {
-    setIsOpen(false);
-  }
 
   useEffect(() => {
     fetch("https://fsl-candidate-api-vvfym.ondigitalocean.app/v1/address", {
@@ -46,37 +60,12 @@ const App = () => {
       });
   }, []);
 
-  useEffect(() => {
-    if (data.length) {
-      const paginationNumber = Math.ceil(data.length / currentPage);
-      let middleData = [];
-      for (let i = 1; paginationNumber >= i; i++) {
-        middleData.push(i);
-        setPaginationData(middleData);
-      }
-    }
-  }, [currentPage, data]);
 
-  const submit = (e: any) => {
-    e.preventDefault();
-
-    const formData = {
-      name: name,
-      address1: address1,
-      address2: address2,
-      city: city,
-      state: state,
-      zip: zip
-    };
-
-    fetch("https://fsl-candidate-api-vvfym.ondigitalocean.app/v1/address", {
-      method: "post",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData)
-    }).then(res => {
-      window.location.href = "/";
-    });
-  };
+  const handleEdit = (row: any) => {
+    console.log(row)
+    setEditData(row);
+    setEditModalIsOpen(true)
+  }
 
   const handleDelete = (id: number) => {
     fetch(
@@ -84,150 +73,42 @@ const App = () => {
       {
         method: "delete"
       }
-    ).then(res => (window.location.href = "/"));
+    )
+    const removedData = data.filter((item: any) => item.id !== id);
+    setData(removedData)
   };
 
   return (
     <div className="App p-5">
-      <div className="top-bar flex justify-between">
-        <select
-          onChange={e => setCurrentPage(e.target.value)}
-          className="border border-blue-700 rounded">
-          <option value="5" defaultChecked>
-            5
-          </option>
-          <option value="10">10</option>
-          <option value="15">15</option>
-        </select>
-
+      <div className="w-10/12 mr-auto ml-auto my-1 top-bar flex justify-start">
         <button
-          className="btn-create rounded bg-blue-700 hover:bg-blue-600 text-gray-100 px-2 py-1"
-          onClick={openModal}>
+          className="btn-create rounded bg-blue-700 hover:bg-blue-600 text-gray-100 px-3 py-2"
+          onClick={() => setModalIsOpen(true)}
+        >
           Create
         </button>
       </div>
-      <table className="border mr-auto ml-auto w-full my-1 data-table">
-        <tr>
-          <th>No</th>
-          <th>Name</th>
-          <th>Address1</th>
-          <th>Address2</th>
-          <th>City</th>
-          <th>State</th>
-          <th>Zip</th>
-          <th>Delete</th>
-        </tr>
-        {data &&
-          data.map((item: any, index: number) => {
-            return (
-              index >= currentPagination &&
-              index < currentPagination + currentPage && (
-                <tr key={index}>
-                  <td>{item.id}</td>
-                  <td>{item.name}</td>
-                  <td>{item.address1}</td>
-                  <td>{item.address2}</td>
-                  <td>{item.city}</td>
-                  <td>{item.state}</td>
-                  <td>{item.zip}</td>
-                  <td>
-                    <button
-                      className="py-1 px-2 bg-red-700 hover:bg-red-600 text-gray-100"
-                      onClick={() => handleDelete(item.id)}>
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              )
-            );
-          })}
-      </table>
-      {paginationData &&
-        paginationData.map((item: any, index: number) => (
-          <button
-            key={index}
-            className="p-1 px-3 mr-1 bg-indigo-700 hover:bg-indigo-600 text-white"
-            onClick={e => setCurrentPagination((item - 1) * currentPage)}>
-            {item}
-          </button>
-        ))}
-      <Modal
+
+      <Table
+        data={data}
+        columns={columns}
+      />
+      <MainModal
         isOpen={modalIsOpen}
-        onRequestClose={closeModal}
-        className="w-9/12 m-auto bg-black opacity-75 py-10 px-16 rounded"
-        contentLabel="Example Modal">
-        <form onSubmit={submit} id="submitForm" className="flex flex-col">
-          <label
-            htmlFor="name"
-            className="text-white text-2xl flex justify-between mb-3">
-            Name :{" "}
-            <input
-              name="name"
-              id="name"
-              onChange={e => setName(e.target.value)}
-              className="bg-transparent border border-white rounded outline-none p-2"
-            />
-          </label>
-          <label
-            htmlFor="address1"
-            className="text-white text-2xl flex justify-between mb-3">
-            Address1 :{" "}
-            <input
-              name="address1"
-              id="address1"
-              onChange={e => setAddress1(e.target.value)}
-              className="bg-transparent border border-white rounded outline-none p-2"
-            />
-          </label>
-          <label
-            htmlFor="address2"
-            className="text-white text-2xl flex justify-between mb-3">
-            Address2 :{" "}
-            <input
-              name="address2"
-              id="address2"
-              onChange={e => setAddress2(e.target.value)}
-              className="bg-transparent border border-white rounded outline-none p-2"
-            />
-          </label>
-          <label
-            htmlFor="city"
-            className="text-white text-2xl flex justify-between mb-3">
-            City :{" "}
-            <input
-              name="city"
-              id="city"
-              onChange={e => setCity(e.target.value)}
-              className="bg-transparent border border-white rounded outline-none p-2"
-            />
-          </label>
-          <label
-            htmlFor="state"
-            className="text-white text-2xl flex justify-between mb-3">
-            State :{" "}
-            <input
-              name="state"
-              id="state"
-              onChange={e => setState(e.target.value)}
-              className="bg-transparent border border-white rounded outline-none p-2"
-            />
-          </label>
-          <label
-            htmlFor="zip"
-            className="text-white text-2xl flex justify-between mb-3">
-            Zip :{" "}
-            <input
-              name="zip"
-              id="zip"
-              onChange={e => setZip(e.target.value)}
-              className="bg-transparent border border-white rounded outline-none p-2"
-            />
-          </label>
-          <button className="mt-8 w-full border border-white rounded py-3 text-2xl text-white font-semibold hover:border-blue-700 hover:text-blue-700">
-            Save
-          </button>
-        </form>
-      </Modal>
+        data={data}
+        setData={setData}
+        onRequestClose={() => setModalIsOpen(false)}
+      />
+      {
+        editData &&
+        <EditModal
+          editData={editData}
+          isOpen={editModalIsOpen}
+          data={data}
+          setData={setData}
+          onRequestClose={() => setEditModalIsOpen(false)}
+        />
+      }
     </div>
   );
 };
